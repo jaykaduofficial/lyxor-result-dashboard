@@ -1,0 +1,34 @@
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-card.accent-success { border-left: 3px solid var(--success); }
+.stat-card.accent-warning { border-left: 3px solid var(--warning); }
+.stat-card.accent-danger { border-left: 3px solid var(--danger); }
+.stat-card.accent-qodo { border-left: 3px solid var(--qodo); }
+.stat-card.accent-lyxor { border-left: 3px solid var(--lyxor); }
+.stat-card.accent-default { border-left: 3px solid var(--accent); }
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.stat-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

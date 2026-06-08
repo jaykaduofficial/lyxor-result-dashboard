@@ -1,0 +1,146 @@
+.pr-detail {
+  min-height: 200px;
+}
+
+.pr-detail.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 3rem;
+}
+
+.pr-detail-header {
+  margin-bottom: 1.5rem;
+}
+
+.pr-detail-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.pr-hash {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.original-pr {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.tool-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.tool-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.tool-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid;
+}
+
+.tool-section-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.skipped-badge {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.pr-link {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+
+.tool-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.finding-group {
+  margin-top: 1rem;
+}
+
+.finding-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  padding-left: 0.5rem;
+  border-left: 3px solid;
+}
+
+.tp-title { border-color: var(--success); color: #86efac; }
+.fp-title { border-color: var(--warning); color: #fcd34d; }
+.fn-title { border-color: var(--danger); color: #fca5a5; }
+.error-title { border-color: var(--danger); }
+
+.finding-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.finding-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.confidence {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.finding-block {
+  margin-top: 0.5rem;
+}
+
+.finding-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.finding-block.reasoning p {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.tp-card { border-left: 3px solid var(--success); }
+.fp-card { border-left: 3px solid var(--warning); }
+.fn-card { border-left: 3px solid var(--danger); }
+.error-card { border-left: 3px solid var(--danger); }

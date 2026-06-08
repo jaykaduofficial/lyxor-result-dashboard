@@ -1,0 +1,1788 @@
+{
+  "https://github.com/jaykaduofficial/saleor-clone/pull/19": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "This new order lookup is exposed as a BaseField without declaring MANAGE_ORDERS permissions. It allows callers to query orders by customer email through a top-level field without the same permission gate used by the existing external-reference lookup.",
+          "severity": "high",
+          "matched_candidate": "latest_order_by_customer_email lacks permissions field - declared as BaseField with no permissions parameter, allowing unauthorized access to sensitive order and PII data",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same security vulnerability: the latest_order_by_customer_email field is exposed as a BaseField without proper MANAGE_ORDERS permissions, allowing unauthorized access to order data. The golden comment emphasizes the lack of permission gate compared to existing lookups, while the candidate explicitly mentions 'lacks permissions field' and 'allowing unauthorized access to sensitive order and PII data'. Both are describing the same permission control issue on the same field."
+        },
+        {
+          "golden_comment": "The resolver builds an unrestricted Order queryset directly instead of using resolve_orders, so it bypasses channel-access filtering for staff users and apps. A caller can request orders from channels they should not be able to access.",
+          "severity": "high",
+          "matched_candidate": "Channel access bypass - resolve_latest_order_by_customer_email does not restrict results to requestor's accessible channels and does not validate provided channel slug",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same security vulnerability: the resolve_latest_order_by_customer_email function bypasses channel-access filtering by building an unrestricted Order queryset directly instead of using the proper resolve_orders method. The golden comment focuses on bypassing channel-access filtering for staff users and apps, while the candidate explicitly mentions not restricting results to requestor's accessible channels and not validating the channel slug. These are semantically equivalent descriptions of the same access control vulnerability."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "latestOrderByCustomerEmail documentation omits behavior details - missing substring matching semantics and ordering by created_at"
+        },
+        {
+          "candidate": "SDL missing ADDED_IN_ markers - new schema elements use text 'Added in Saleor 3.22' but lack required ADDED_IN_{VERSION} marker substring"
+        },
+        {
+          "candidate": "Hardcoded example.com assertion in test - test asserts customerEmailDomain against hardcoded string instead of deriving from email variable"
+        },
+        {
+          "candidate": "Domain resolver lacks fallback - resolve_customer_email_domain returns None when order.user_email is blank but order.user_id exists, inconsistent with Order.get_customer_email() behavior"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The email lookup uses icontains rather than validating and matching the full email address. This enables broad enumeration-style searches such as domain fragments and can return another customer's latest order.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The customerEmailDomain resolver derives data from user_email without applying the existing userEmail permission and obfuscation rules. It leaks customer email-derived information even in contexts where the full email would normally be protected.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 6,
+      "total_golden": 4,
+      "tp": 2,
+      "fp": 4,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.3333333333333333,
+      "recall": 0.5,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR19__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR19__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The email lookup uses icontains rather than validating and matching the full email address. This enables broad enumeration-style searches such as domain fragments and can return another customer's latest order.",
+          "severity": "high",
+          "matched_candidate": "filter_customer_email function performs case-insensitive contains search (icontains) on email fields allowing email fragment searches, which could be exploited to enumerate customer email addresses through brute-force or dictionary attacks without minimum search length requirements or rate limiting",
+          "confidence": 0.95,
+          "reasoning": "Both the golden comment and candidate issue identify the same core vulnerability: the use of 'icontains' for email lookup allows partial/fragment matching instead of exact email validation. Both recognize this enables enumeration attacks and potential unauthorized access to customer data. The candidate provides additional security context (brute-force, rate limiting) but fundamentally describes the same underlying issue - that icontains permits broad searches that can expose other customers' information."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "resolve_customer_email_domain method accesses root.node.user_email and root.node.user_id without null checking the root.node object, causing potential NullPointerException if root.node is null"
+        },
+        {
+          "candidate": "Email domain extraction logic email.split('@')[-1] assumes valid email format and fails for malformed emails with multiple '@' symbols, no '@' symbol, or empty strings, returning unexpected results instead of null"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "This new order lookup is exposed as a BaseField without declaring MANAGE_ORDERS permissions. It allows callers to query orders by customer email through a top-level field without the same permission gate used by the existing external-reference lookup.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The resolver builds an unrestricted Order queryset directly instead of using resolve_orders, so it bypasses channel-access filtering for staff users and apps. A caller can request orders from channels they should not be able to access.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The customerEmailDomain resolver derives data from user_email without applying the existing userEmail permission and obfuscation rules. It leaks customer email-derived information even in contexts where the full email would normally be protected.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 2,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.3333333333333333,
+      "recall": 0.25,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR19__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR19__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/34": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "This recalculates expiresAt from finishedAt and ignores the persisted expiresAt value, so exports with explicit or migrated expiration timestamps can display the wrong expiry.",
+          "severity": "medium",
+          "matched_candidate": "batchExportRouter.all recomputes expiresAt, timeToExpireMs, and isExpired from finishedAt using hardcoded BATCH_EXPORT_RETENTION_MS (1 hour) instead of using the expiresAt persisted by the worker, marking exports as expired early and returning url: \"expired\" even while the signed URL remains valid",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: the code recalculates expiresAt from finishedAt using a hardcoded retention value (BATCH_EXPORT_RETENTION_MS) instead of using the persisted expiresAt value. This causes exports with explicit or migrated expiration timestamps to show incorrect expiry information. The candidate provides more technical detail about the consequences (marking exports as expired early, returning 'url: expired'), but the underlying bug is identical."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "BatchExportsSettingsPage displays download window using BATCH_EXPORT_RETENTION_HOURS (1 hour), but actual download-link expiration is controlled by BATCH_EXPORT_DOWNLOAD_LINK_EXPIRATION_HOURS (default 24 hours), showing users the wrong retention duration"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The summary is calculated only from the current paginated page, not all exports in the project, so the dashboard counts change when the user pages through the table.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Rounding can show 0m for exports that still have time remaining, which makes active exports look expired or unusable before the server marks them expired.",
+          "severity": "low"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 3,
+      "tp": 1,
+      "fp": 1,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.5,
+      "recall": 0.3333333333333333,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR34__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR34__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "timeToExpireMs calculation can result in negative values when current time is after expiration time, potentially causing unexpected formatting behavior in formatTimeToExpire function"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "This recalculates expiresAt from finishedAt and ignores the persisted expiresAt value, so exports with explicit or migrated expiration timestamps can display the wrong expiry.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The summary is calculated only from the current paginated page, not all exports in the project, so the dashboard counts change when the user pages through the table.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Rounding can show 0m for exports that still have time remaining, which makes active exports look expired or unusable before the server marks them expired.",
+          "severity": "low"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 1,
+      "total_golden": 3,
+      "tp": 0,
+      "fp": 1,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR34__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR34__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/24": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Channel scoping only considers menu items linked to collections. Menus containing page, category, or URL items for the channel are excluded from the summary.",
+          "severity": "high",
+          "matched_candidate": "Channel filter excludes urls - resolve_menu_summary filters menus by items__collection__channel_listings__channel__slug, which removes all URL/category/page-linked menu items even though the summary's LINKED logic explicitly includes those link types",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same underlying problem: the channel filtering logic only considers menu items linked to collections (via items__collection__channel_listings__channel__slug), which incorrectly excludes menu items that are linked to pages, categories, or URLs. The golden comment states these non-collection items are 'excluded from the summary,' while the candidate explains the technical cause (the filter) and notes that the summary's LINKED logic should include those types. They describe the same bug from slightly different angles."
+        },
+        {
+          "golden_comment": "The summary aggregates after joins but does not use distinct counts. Menus with multiple matching items can inflate `totalCount` and related item totals.",
+          "severity": "high",
+          "matched_candidate": "Menu count miscomputed - resolve_menu_summary calculates total_count=Count('id') in the same aggregate query that joins Menu to MenuItem, so a menu with N matching items contributes N to total_count, making totalCount incorrect whenever a menu has multiple items",
+          "confidence": 0.98,
+          "reasoning": "Both issues identify the exact same bug: the summary aggregation counts Menu records after joining with MenuItem, causing menus with multiple matching items to be counted multiple times instead of once. The golden comment mentions 'aggregates after joins' without 'distinct counts' inflating totals, while the candidate explicitly describes how 'Count(id)' in a join query causes 'N matching items contributes N to total_count'. These are semantically identical descriptions of the same underlying defect."
+        },
+        {
+          "golden_comment": "`maxLevel: 0` is ignored because the condition treats zero as false, so callers cannot request only top-level menu items.",
+          "severity": "medium",
+          "matched_candidate": "maxLevel zero ignored - filter_menu_summary uses a truthiness check for max_level, so maxLevel: 0 is ignored and the queryset is not filtered despite 0 being a valid request to include only level-0 items",
+          "confidence": 1.0,
+          "reasoning": "Both comments identify the exact same issue: the code uses a truthiness check on maxLevel/max_level, which causes 0 to be treated as false and ignored, preventing callers from requesting only top-level (level-0) menu items. The candidate provides more technical detail (mentioning filter_menu_summary function and queryset filtering) but describes the identical bug."
+        },
+        {
+          "golden_comment": "The annotation hook for `CHILDREN_COUNT` sorting is defined on the input class instead of the enum class, so sorting by this field may run without the required `children_count` annotation.",
+          "severity": "medium",
+          "matched_candidate": "Children sort breaks - Sorting menu items by CHILDREN_COUNT will fail because the required children_count annotation is never applied: the custom qs_with_children_count hook is defined on MenuItemSortingInput, but sorting only looks for hooks on the sort enum (MenuItemsSortField)",
+          "confidence": 0.98,
+          "reasoning": "Both comments identify the exact same issue: the annotation hook for CHILDREN_COUNT sorting is defined on the wrong class (MenuItemSortingInput/input class) instead of the enum class (MenuItemsSortField/enum class), which means the required children_count annotation won't be applied when sorting by this field. The candidate provides more detail about the consequence (sorting will fail), but the core problem identified is identical."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "menuSummary lacks ADDED_IN tag - New GraphQL schema elements are documented with 'Added in Saleor 3.22.' rather than the required ADDED_IN_{VERSION} marker, and they reference 3.22 despite the repository version indicating 3.24"
+        },
+        {
+          "candidate": "scope uses raw string - The new GraphQL test passes the enum variable scope as the raw string 'LINKED' instead of using the corresponding Python enum member"
+        },
+        {
+          "candidate": "Menu summary tests lack GWT - The newly added tests are not named using a Given/When/Then scenario style, reducing readability and violating the Given/When/Then structuring requirement"
+        },
+        {
+          "candidate": "ChildrenCount loader overfetch - MenuItemChildrenCountLoader fetches full MenuItem rows for all children and counts them in Python, which can overfetch and increase memory/DB bandwidth for large menus"
+        }
+      ],
+      "false_negatives": [],
+      "errors": [],
+      "total_candidates": 8,
+      "total_golden": 4,
+      "tp": 4,
+      "fp": 4,
+      "fn": 0,
+      "errors_count": 0,
+      "precision": 0.5,
+      "recall": 1.0,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR24__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR24__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The summary aggregates after joins but does not use distinct counts. Menus with multiple matching items can inflate `totalCount` and related item totals.",
+          "severity": "high",
+          "matched_candidate": "Missing distinct() in menu summary aggregation with channel filter - when channel filtering is applied via items__collection__channel_listings join, aggregate functions (Count, Max) may count duplicate menu records, leading to inflated summary statistics",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same underlying problem: aggregation functions (Count/Max) are being applied after joins without using distinct, which can lead to inflated/duplicate counts when menus have multiple matching items. The golden comment mentions 'joins' causing inflation of totalCount and item totals, while the candidate specifically identifies the 'items__collection__channel_listings join' causing duplicate menu records in aggregate functions. Both are describing the same bug - missing distinct in aggregation after joins."
+        }
+      ],
+      "false_positives": [],
+      "false_negatives": [
+        {
+          "golden_comment": "Channel scoping only considers menu items linked to collections. Menus containing page, category, or URL items for the channel are excluded from the summary.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "`maxLevel: 0` is ignored because the condition treats zero as false, so callers cannot request only top-level menu items.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The annotation hook for `CHILDREN_COUNT` sorting is defined on the input class instead of the enum class, so sorting by this field may run without the required `children_count` annotation.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 1,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 0,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 1.0,
+      "recall": 0.25,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR24__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR24__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/21": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "The remaining_uses calculation uses Sum('usage_limit') - Sum('codes__used') which could produce unexpected results when usage_limit is null for some vouchers, potentially masking cases where some vouchers have usage limits and others don't"
+        },
+        {
+          "candidate": "Filter function coupling between layers: filter_voucher_usage_summary function is defined in filters.py but called directly from resolvers.py, creating cross-layer coupling that breaks the typical Django filter pattern"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Searching through voucher codes joins the codes table but does not call `distinct()`. A voucher with multiple matching codes can be counted multiple times in the summary totals.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The active and expired conditions overlap at the exact `end_date` timestamp, so a voucher ending at `now` can be counted as both active and expired.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The resolver always counts all voucher codes and ignores the `includeInactiveCodes` filter, so callers cannot exclude inactive codes from summary totals.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "`usage_limit` is summed after joining voucher codes, so vouchers with multiple codes have their limit counted multiple times. Remaining uses can be heavily overstated.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 2,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR21__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR21__20260602/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Searching through voucher codes joins the codes table but does not call `distinct()`. A voucher with multiple matching codes can be counted multiple times in the summary totals.",
+          "severity": "medium",
+          "matched_candidate": "resolve_voucher_usage_summary() aggregates voucher-level counts and code-level sums on the same queryset, forcing a JOIN to VoucherCode that multiplies voucher rows per code and inflates total_count/active_count/limited_count and Sum(usage_limit), producing incorrect remaining_uses whenever vouchers have multiple codes",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same underlying problem: when searching/querying vouchers with multiple codes, the JOIN to VoucherCode causes vouchers to appear multiple times in results, leading to incorrect counts and aggregations. The golden comment focuses on the missing distinct() call, while the candidate provides more detail about the specific aggregation issues (inflated counts and sums), but they are describing the same root cause and its consequences."
+        },
+        {
+          "golden_comment": "The resolver always counts all voucher codes and ignores the `includeInactiveCodes` filter, so callers cannot exclude inactive codes from summary totals.",
+          "severity": "medium",
+          "matched_candidate": "VoucherUsageSummaryFilterInput exposes includeInactiveCodes/include_inactive_codes, but neither filter_voucher_usage_summary() nor resolve_voucher_usage_summary() reads it, so the flag has no effect and inactive codes are always included, breaking the API contract",
+          "confidence": 1.0,
+          "reasoning": "Both comments identify the exact same issue: the `includeInactiveCodes` filter parameter is exposed in the API but is not actually used/read by the resolver functions, resulting in inactive codes always being included in the count regardless of the filter value. The candidate provides more technical detail about which specific functions ignore the parameter, but the core problem is identical."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "New GraphQL fields use ADDED_IN_322, but its value is 'Added in Saleor 3.22.' and does not include the required ADDED_IN_{VERSION} marker, breaking version-tag compliance for newly added field descriptions"
+        },
+        {
+          "candidate": "New GraphQL SDL elements in schema.graphql document version as 'Added in Saleor 3.22.' but do not include the required ADDED_IN_{VERSION} annotation, violating the requirement for version annotations on new schema elements"
+        },
+        {
+          "candidate": "active_count and expired_count only consider start/end dates but ignore usage_limit exhaustion, which is part of Saleor's voucher validity logic, causing voucherUsageSummary to disagree with voucher validity logic used elsewhere"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The active and expired conditions overlap at the exact `end_date` timestamp, so a voucher ending at `now` can be counted as both active and expired.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "`usage_limit` is summed after joining voucher codes, so vouchers with multiple codes have their limit counted multiple times. Remaining uses can be heavily overstated.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 5,
+      "total_golden": 4,
+      "tp": 2,
+      "fp": 3,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.4,
+      "recall": 0.5,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR21__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR21__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/20": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Gift cards expiring today are counted as expired, while the active-count logic still treats today as active. The summary can report the same card as both active and expired.",
+          "severity": "medium",
+          "matched_candidate": "Expiry boundary mismatch - summary counts expiry_date == today as expired using expiry_date__lte=today, but deactivation task treats cards as expired only when expiry_date < today, causing inconsistent logic and potential double-counting",
+          "confidence": 0.98,
+          "reasoning": "Both issues identify the same core problem: an inconsistency in how 'today' is treated when checking gift card expiration. The golden comment notes that cards expiring today are counted as expired in the summary (implying `<=` comparison) but treated as active elsewhere. The candidate issue explicitly identifies the same boundary mismatch - summary uses `expiry_date__lte=today` (less than or equal) while deactivation uses `expiry_date < today` (strictly less than), leading to the same card being counted in both active and expired categories. This is the identical underlying bug with more technical detail."
+        },
+        {
+          "golden_comment": "The `currency` field is non-null, but the resolver returns `None` when the filtered queryset has no gift cards. Empty results can cause a GraphQL non-null field error instead of returning a zero summary.",
+          "severity": "medium",
+          "matched_candidate": "Currency may be null - GiftCardSummary.currency is non-null in schema but _get_summary_currency returns None when queryset is empty and no currency filter provided, causing GraphQL non-null violation",
+          "confidence": 0.98,
+          "reasoning": "Both comments identify the exact same issue: the `currency` field in GiftCardSummary is defined as non-null in the GraphQL schema, but the `_get_summary_currency` resolver function returns None when the queryset is empty (no gift cards found), which will cause a GraphQL non-null field violation error. The candidate issue is more specific about the function name and conditions, but describes the identical underlying problem."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "Permission test lacks error message - test only asserts error count but not the GraphQL error message or stable identifier, allowing regressions where query fails for wrong reason"
+        },
+        {
+          "candidate": "Tag join inflates totals - resolve_gift_card_summary aggregates Count('tags') with other counts and sums, causing M2M JOIN that duplicates gift card rows and inflates all aggregates when cards have multiple tags"
+        },
+        {
+          "candidate": "Tag filter duplicates rows - filter_gift_cards_for_summary filters by tags__name__icontains without distinct()/Exists, returning duplicate gift cards when multiple tags match and inflating subsequent aggregates"
+        },
+        {
+          "candidate": "Duplicated 'USD' literal in test - test repeats same literal in both setup and assertions instead of binding once and reusing variable"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The summary tag filter uses partial case-insensitive matching, so filtering by `vip` can include unrelated tags like `not-vip` or `vip-old`, producing misleading gift card totals.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "When no currency filter is provided, the resolver aggregates balances across all currencies but labels the money values with the first currency found. That makes financial totals invalid.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 6,
+      "total_golden": 4,
+      "tp": 2,
+      "fp": 4,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.3333333333333333,
+      "recall": 0.5,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR20__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR20__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The `currency` field is non-null, but the resolver returns `None` when the filtered queryset has no gift cards. Empty results can cause a GraphQL non-null field error instead of returning a zero summary.",
+          "severity": "medium",
+          "matched_candidate": "Currency filtering may result in None currency when no gift cards exist to determine default currency, but no fallback mechanism is provided",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: when no gift cards exist (or after filtering results in an empty set), the currency field returns None, which conflicts with it being a non-null field in GraphQL. The golden comment emphasizes the non-null field error consequence, while the candidate focuses on the lack of fallback mechanism, but both are describing the same underlying problem - None being returned for a non-null currency field when there are no gift cards."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "The _get_average function divides by total_count without checking if it's zero before the division operation, though an early return exists the logic could be clearer and more explicit"
+        },
+        {
+          "candidate": "The _to_money function returns None when currency is None, but calling code doesn't handle this case and GraphQL schema defines money fields as non-nullable, potentially causing schema validation errors"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The summary tag filter uses partial case-insensitive matching, so filtering by `vip` can include unrelated tags like `not-vip` or `vip-old`, producing misleading gift card totals.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Gift cards expiring today are counted as expired, while the active-count logic still treats today as active. The summary can report the same card as both active and expired.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "When no currency filter is provided, the resolver aggregates balances across all currencies but labels the money values with the first currency found. That makes financial totals invalid.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 2,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.3333333333333333,
+      "recall": 0.25,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR20__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR20__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/37": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "Potential race condition in useEffect form reset where form could become dirty between check and setValue call, potentially overwriting user input"
+        },
+        {
+          "candidate": "Missing error handling for allPromptNames API query failures, which could lead to incorrect suggested names or validation behavior"
+        },
+        {
+          "candidate": "Missing validation for whitespace-only prompt names that would normalize to empty strings and fail server-side validation without clear user feedback"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The path normalizer only removes one leading and one trailing slash. Values like `//folder//` can still normalize incorrectly after trimming, which can create unexpected prompt paths.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The form default name is set before `allPromptNames` may finish loading and is never reset when the suggested name changes, so the dialog can keep a colliding `-copy` name.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The entitlement check disables duplication when the resulting prompt count equals the limit, even though reaching the limit should still be allowed.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The normalized target path is escaped for SQL LIKE and then used with Prisma `startsWith`, so names containing LIKE characters can be checked against the wrong literal prefix and miss collisions.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 3,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR37__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR37__20260603/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The entitlement check disables duplication when the resulting prompt count equals the limit, even though reaching the limit should still be allowed.",
+          "severity": "medium",
+          "matched_candidate": "DuplicateFolder disables submit when currentPrompts + promptsToCopy >= promptLimit, which blocks operations that would bring the total exactly to the allowed limit, contradicting existing entitlement semantics that only block when current >= limit",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same bug: the duplication check incorrectly prevents operations when the total would equal the limit (using >= instead of >), even though reaching the limit exactly should be allowed. The candidate provides more implementation detail (currentPrompts + promptsToCopy >= promptLimit) while the golden is more concise, but they describe the identical off-by-one error in the entitlement logic."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "normalizePromptPath() strips leading/trailing slashes before trimming whitespace, so inputs like ' /foo/ ' normalize to '/foo/' (slashes remain) instead of 'foo', which can create visually separate prompt paths and defeat collision-avoidance logic"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The path normalizer only removes one leading and one trailing slash. Values like `//folder//` can still normalize incorrectly after trimming, which can create unexpected prompt paths.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The form default name is set before `allPromptNames` may finish loading and is never reset when the suggested name changes, so the dialog can keep a colliding `-copy` name.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The normalized target path is escaped for SQL LIKE and then used with Prisma `startsWith`, so names containing LIKE characters can be checked against the wrong literal prefix and miss collisions.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 1,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.5,
+      "recall": 0.25,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR37__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR37__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/23": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Channel scoping filters through shipping method listings instead of the shipping zone's channel assignment. A zone assigned to the channel but without channel-listed methods is excluded from the summary.",
+          "severity": "medium",
+          "matched_candidate": "Channel filter ignores zone channels - resolve_shipping_zone_summary filters zones only via shipping_methods__channel_listings__channel__slug instead of ShippingZone.channels, which can include zones not assigned to that channel and exclude zones that are assigned",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same core problem: the filtering logic uses shipping_methods__channel_listings__channel__slug to determine zone inclusion instead of checking the ShippingZone.channels assignment directly. Both describe how this causes zones assigned to a channel but without channel-listed methods to be incorrectly excluded from the summary. The candidate is more explicit about the technical implementation details, while the golden comment is more concise, but they describe the identical bug."
+        },
+        {
+          "golden_comment": "The aggregate counts are performed after joins introduced by channel filtering, so zones and methods can be counted multiple times unless distinct counts are used.",
+          "severity": "medium",
+          "matched_candidate": "Counts inflated by joins - resolve_shipping_zone_summary aggregates counts across related tables without DISTINCT, causing duplicate ShippingZone rows to be counted repeatedly and inflating totalCount/defaultCount/methodCount/channelCount/countryCount",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: aggregate counts in resolve_shipping_zone_summary are inflated due to joins that create duplicate rows, and the solution requires using DISTINCT counts. The golden comment mentions 'joins introduced by channel filtering' causing zones and methods to be counted multiple times, while the candidate is more specific about ShippingZone rows being duplicated across related tables. Both describe the same bug - incorrect counting due to join-induced duplication without DISTINCT."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "shippingZoneSummary missing ADDED_IN_ tag - New GraphQL fields/descriptions use prose like 'Added in Saleor 3.22.' instead of including an ADDED_IN_{VERSION} token as required"
+        },
+        {
+          "candidate": "Country count computed inefficiently - countryCount is calculated by iterating the queryset and loading full model rows instead of using aggregation"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Country counting iterates over the joined queryset directly. If the queryset contains duplicate zone rows from joins, the same zone's countries are counted more than once.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 4,
+      "total_golden": 3,
+      "tp": 2,
+      "fp": 2,
+      "fn": 1,
+      "errors_count": 0,
+      "precision": 0.5,
+      "recall": 0.6666666666666666,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR23__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR23__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "Missing test for empty shipping zones scenario - test coverage does not include a scenario where there are no shipping zones in the system"
+        },
+        {
+          "candidate": "Potential performance issue with country count calculation - uses sum(len(zone.countries) for zone in qs) which loads all zone objects and their countries data into memory, causing inefficiency with large datasets"
+        },
+        {
+          "candidate": "Inconsistent null handling in aggregate results - uses 'or 0' pattern instead of explicit null checks for database aggregate results"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Channel scoping filters through shipping method listings instead of the shipping zone's channel assignment. A zone assigned to the channel but without channel-listed methods is excluded from the summary.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The aggregate counts are performed after joins introduced by channel filtering, so zones and methods can be counted multiple times unless distinct counts are used.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Country counting iterates over the joined queryset directly. If the queryset contains duplicate zone rows from joins, the same zone's countries are counted more than once.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 3,
+      "tp": 0,
+      "fp": 3,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR23__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR23__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/29": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Coverage is divided by the number of run item rows in the run instead of the total dataset item count, so runs can show high or full coverage even when they only cover a small part of the dataset.",
+          "severity": "high",
+          "matched_candidate": "ClickHouse coverage_percent calculation divides count(DISTINCT dataset_item_id) by count() on dataset_run_items_deduped, which already has one row per dataset_item_id per run, so coverage_percent becomes 100% for any non-empty run",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same bug: the coverage percentage calculation is incorrect because it divides by the count of rows in dataset_run_items_deduped (which has one row per dataset_item_id per run) instead of the total dataset item count. This causes coverage to show as 100% or artificially high when it should reflect the proportion of the entire dataset covered. The golden comment describes the symptom (high/full coverage for partial dataset coverage) while the candidate explains the technical cause (dividing by deduplicated run items instead of total dataset items), but they're describing the same underlying issue."
+        },
+        {
+          "golden_comment": "The dataset item count is not scoped by projectId, which can count records outside the current project if dataset IDs collide or data is imported across environments.",
+          "severity": "high",
+          "matched_candidate": "runCoverageSummary counts dataset items by datasetId only without projectId scoping, even though DatasetItem is keyed/scoped by projectId, which can return incorrect counts and mix items across projects if dataset IDs collide",
+          "confidence": 0.98,
+          "reasoning": "Both comments identify the same core issue: the runCoverageSummary function counts dataset items using only datasetId without including projectId in the scope, which can lead to incorrect counts when dataset IDs collide across projects. The golden comment mentions 'dataset item count is not scoped by projectId' and 'can count records outside the current project', while the candidate describes 'counts dataset items by datasetId only without projectId scoping' and 'can return incorrect counts and mix items across projects'. These are semantically identical descriptions of the same bug."
+        },
+        {
+          "golden_comment": "The summary endpoint loads metrics for every matching run without pagination or a limit, so opening the dataset runs table can trigger a heavy ClickHouse aggregation for large datasets.",
+          "severity": "high",
+          "matched_candidate": "runCoverageSummary fetches per-run metrics via getDatasetRunsTableMetricsCh for all runs and reduces in Node, but that ClickHouse query also computes latency/cost and score aggregations per run unnecessarily, causing slow responses/timeouts on datasets with many runs",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same core problem: the summary/metrics endpoint performs expensive ClickHouse aggregations for all matching runs without proper limits or pagination. The golden comment focuses on the lack of pagination/limits causing heavy aggregations, while the candidate provides more technical detail about the specific query (getDatasetRunsTableMetricsCh) computing unnecessary per-run aggregations (latency/cost/score). Both describe the same performance issue - unbounded aggregation queries on large datasets leading to slow responses/timeouts."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "runCoverageSummary bypasses existing dataset-item counting logic used elsewhere, risking incorrect counts with versioned dataset items"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "When the summary query fails or returns no data, the UI renders zero values instead of showing an error or empty state, which can make missing summary data look like real metrics.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 4,
+      "total_golden": 4,
+      "tp": 3,
+      "fp": 1,
+      "fn": 1,
+      "errors_count": 0,
+      "precision": 0.75,
+      "recall": 0.75,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR29__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR29__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "Coverage percentage calculation in dataset-run-items.ts may not handle all edge cases properly, especially with empty datasets or filtered results returning no rows"
+        },
+        {
+          "candidate": "Inconsistent null handling for coveragePercent between dataset-run-items.ts (which uses ?? 0 default) and DatasetRunsTable.tsx (which lacks explicit null checking in row data transformation)"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Coverage is divided by the number of run item rows in the run instead of the total dataset item count, so runs can show high or full coverage even when they only cover a small part of the dataset.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The dataset item count is not scoped by projectId, which can count records outside the current project if dataset IDs collide or data is imported across environments.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The summary endpoint loads metrics for every matching run without pagination or a limit, so opening the dataset runs table can trigger a heavy ClickHouse aggregation for large datasets.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "When the summary query fails or returns no data, the UI renders zero values instead of showing an error or empty state, which can make missing summary data look like real metrics.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 2,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR29__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR29__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/22": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "stockSummary lacks ADDED_IN_2.3.0 marker - New GraphQL schema elements use 'Added in Saleor 3.22.' and 'ADDED_IN_322' instead of the required 'ADDED_IN_2.3.0' marker in their descriptions, breaking version-introduction documentation requirements"
+        },
+        {
+          "candidate": "Null threshold breaks stockSummary - resolve_stock_summary uses low_stock_threshold directly in Q(quantity__lte=low_stock_threshold) while the GraphQL argument is nullable, so a client sending lowStockThreshold: null can cause ORM filter construction to fail"
+        },
+        {
+          "candidate": "Allocated totals may diverge - stockSummary aggregates Stock.quantity_allocated, but core stock availability logic computes allocated quantity from Allocation.quantity_allocated rows, leading to inconsistent totalAllocated/totalAvailable values when stocks drift out of sync with allocations"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Low-stock counting uses raw `quantity` instead of available quantity. A stock with high quantity but nearly all units allocated will not be counted as low stock.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The available total subtracts allocations but ignores active reservations, so the summary can overstate inventory available to sell.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 2,
+      "tp": 0,
+      "fp": 3,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR22__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR22__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "Sum('quantity') and Sum('quantity_allocated') could potentially overflow if total quantities exceed maximum integer value in large-scale installations with millions of stock records"
+        },
+        {
+          "candidate": "Django ORM's Sum function returns Decimal for integer fields when sum might exceed integer range, but code expects integer values causing potential type conversion errors"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Low-stock counting uses raw `quantity` instead of available quantity. A stock with high quantity but nearly all units allocated will not be counted as low stock.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The available total subtracts allocations but ignores active reservations, so the summary can overstate inventory available to sell.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 2,
+      "tp": 0,
+      "fp": 2,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR22__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR22__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/17": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Arguments are sorted by their GraphQL type string instead of by argument name. Fields with multiple arguments of the same type will keep insertion order, while mixed-type arguments will be reordered unpredictably from a client documentation perspective.",
+          "severity": "medium",
+          "matched_candidate": "When sort_schema=True, print_args() sorts by the argument type string instead of the argument name, so arguments sharing the same type remain in their original insertion order and the output isn't fully sorted/stable across schema construction order changes.",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: the print_args() function sorts arguments by their GraphQL type string rather than by argument name when sort_schema=True. Both note that arguments with the same type maintain insertion order while mixed-type arguments get reordered unpredictably. The candidate provides slightly more technical detail about stability across schema construction changes, but fundamentally describes the identical bug."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "New tests repeat the same string literals in both setup and assertions (e.g., type/field/enum names), instead of extracting them into shared variables. This reduces maintainability and violates the test-literal reuse requirement."
+        },
+        {
+          "candidate": "Sorting uses name.lower() as the only key for types/directives/fields/values, so if any schema names differ only by case the ordering falls back to original insertion order and the output is not fully deterministic."
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Sorting enum values changes the declaration order exposed in generated SDL. Enum ordering is often curated for documentation and backwards-compatible schema diffs, so stable type sorting should not reorder enum values unless explicitly required.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The management command now sorts schema output by default, which changes the generated schema.graphql ordering for every caller unless they discover and pass --preserve-order. This can create large unrelated schema diffs and break existing tooling that expects the previous output order.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Federation service SDL is now forced through sorted schema output, while the public schema printer still defaults to preserving order. That can make _service.sdl differ from the generated schema in ordering, producing noisy federation schema changes unrelated to actual API changes.",
+          "severity": "low"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 2,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.3333333333333333,
+      "recall": 0.25,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR17__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR17__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [],
+      "false_negatives": [
+        {
+          "golden_comment": "Sorting enum values changes the declaration order exposed in generated SDL. Enum ordering is often curated for documentation and backwards-compatible schema diffs, so stable type sorting should not reorder enum values unless explicitly required.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Arguments are sorted by their GraphQL type string instead of by argument name. Fields with multiple arguments of the same type will keep insertion order, while mixed-type arguments will be reordered unpredictably from a client documentation perspective.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The management command now sorts schema output by default, which changes the generated schema.graphql ordering for every caller unless they discover and pass --preserve-order. This can create large unrelated schema diffs and break existing tooling that expects the previous output order.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Federation service SDL is now forced through sorted schema output, while the public schema printer still defaults to preserving order. That can make _service.sdl differ from the generated schema in ordering, producing noisy federation schema changes unrelated to actual API changes.",
+          "severity": "low"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 0,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 0,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR17__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR17__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/18": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The reusable thumbnail matcher allows thumbnails with format None to satisfy a request for a specific format such as WEBP or AVIF. This can redirect clients to a JPEG/PNG thumbnail when they explicitly requested a converted format.",
+          "severity": "medium",
+          "matched_candidate": "get_reusable_thumbnail treats thumbnails whose normalized format is None (original) as reusable for any requested format, so a WEBP/AVIF request can be satisfied by an original-format thumbnail, causing /thumbnail/.../size/format/ and GraphQL ThumbnailField(format=WEBP/AVIF) to return a non-matching format URL and avoid generating the requested format",
+          "confidence": 0.98,
+          "reasoning": "Both the golden comment and candidate issue identify the same underlying bug: the reusable thumbnail matcher incorrectly treats thumbnails with format None (original format) as reusable for any requested format (like WEBP or AVIF). This causes clients who explicitly request a specific format to receive URLs pointing to thumbnails in the original format (JPEG/PNG) instead of the converted format they requested. The candidate provides more technical detail about the mechanism (get_reusable_thumbnail function, /thumbnail/ endpoint, GraphQL ThumbnailField) but describes the exact same problem."
+        }
+      ],
+      "false_positives": [],
+      "false_negatives": [
+        {
+          "golden_comment": "The view loads every larger thumbnail for the object without filtering by requested format in the database. On objects with many generated thumbnails this does unnecessary work and also depends on Python-side filtering for correctness.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "For every missing exact thumbnail key, the dataloader scans the full thumbnail list for that instance in Python. Large batches with many size variants can degrade to repeated linear scans instead of using a precomputed reusable-thumbnail map.",
+          "severity": "low"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 1,
+      "total_golden": 3,
+      "tp": 1,
+      "fp": 0,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR18__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR18__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The view loads every larger thumbnail for the object without filtering by requested format in the database. On objects with many generated thumbnails this does unnecessary work and also depends on Python-side filtering for correctness.",
+          "severity": "medium",
+          "matched_candidate": "BaseThumbnailBySizeAndFormatLoader.batch_load method now loads all thumbnails for all instance IDs which could cause performance regression and memory issues when instances have many thumbnails",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same underlying problem: the batch_load method loads all thumbnails for objects without filtering by format at the database level, which causes performance issues when objects have many thumbnails. The golden comment emphasizes 'loads every larger thumbnail without filtering by requested format' and 'unnecessary work', while the candidate describes 'loads all thumbnails for all instance IDs' causing 'performance regression and memory issues'. These are semantically equivalent descriptions of the same inefficient loading behavior."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "get_reusable_thumbnail function compares thumbnail.format directly with requested_format without normalization, potentially causing format mismatches (e.g., 'WEBP' vs 'webp') and preventing thumbnail reuse"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The reusable thumbnail matcher allows thumbnails with format None to satisfy a request for a specific format such as WEBP or AVIF. This can redirect clients to a JPEG/PNG thumbnail when they explicitly requested a converted format.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "For every missing exact thumbnail key, the dataloader scans the full thumbnail list for that instance in Python. Large batches with many size variants can degrade to repeated linear scans instead of using a precomputed reusable-thumbnail map.",
+          "severity": "low"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 3,
+      "tp": 1,
+      "fp": 1,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.5,
+      "recall": 0.3333333333333333,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR18__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR18__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/35": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The health lookup shares the same catch block as validation, so a transient channel fetch/rate-limit failure can make a valid Slack integration appear disconnected.",
+          "severity": "high",
+          "matched_candidate": "Any transient Slack API error during health collection will be caught and returned as isConnected=false, misreporting healthy integrations as disconnected",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: transient Slack API errors (rate limits, network failures, etc.) during health checks are caught by the same error handling as validation errors, causing healthy/valid integrations to be incorrectly reported as disconnected. The golden comment emphasizes the shared catch block between health lookup and validation, while the candidate focuses on the misreporting outcome, but they describe the same underlying bug."
+        },
+        {
+          "golden_comment": "Building status now fetches all Slack channels recursively. Since the connection card polls status, large workspaces can hit Slack API limits or slow down settings pages.",
+          "severity": "medium",
+          "matched_candidate": "getIntegrationStatus now calls getIntegrationHealth, which runs conversations.list pagination (via getChannels) and a second auth.test; since SlackConnectionCard polls this endpoint every 30s, it can easily hit Slack rate limits and slow the settings UI",
+          "confidence": 0.98,
+          "reasoning": "Both comments identify the same core issue: the status/health check endpoint now fetches all Slack channels with pagination, and because this endpoint is polled frequently (every 30s by the connection card/settings page), it can hit Slack API rate limits and cause performance problems in large workspaces. The candidate provides more technical detail (mentions getIntegrationStatus, getIntegrationHealth, conversations.list, getChannels) but describes the identical problem."
+        },
+        {
+          "golden_comment": "Private channels are sorted before public channels, which reverses the intended public-first ordering and makes common public channels harder to find.",
+          "severity": "medium",
+          "matched_candidate": "ChannelSelector's comment says it sorts 'public/private', but the comparator actually sorts private channels before public channels, misleading future maintenance",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same underlying issue: the ChannelSelector's sorting behavior is reversed from what is documented/intended. The golden comment focuses on the user-facing impact (private channels appearing before public ones, making public channels harder to find), while the candidate focuses on the code-level discrepancy (comment says 'public/private' but implementation does the opposite). These are two perspectives on the exact same bug - the sorting comparator is backwards."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "The Slack router test suite mocks SlackService.getInstance without a getIntegrationHealth method, but getIntegrationStatus now calls getIntegrationHealth for valid integrations, which will throw at runtime and make the connected-status tests fail"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "When a manually-entered channel has no name, the channel id is sent as channelName, causing display/audit values such as ##general or raw Slack IDs instead of the intended channel name.",
+          "severity": "low"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 4,
+      "total_golden": 4,
+      "tp": 3,
+      "fp": 1,
+      "fn": 1,
+      "errors_count": 0,
+      "precision": 0.75,
+      "recall": 0.75,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR35__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR35__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "When a manually-entered channel has no name, the channel id is sent as channelName, causing display/audit values such as ##general or raw Slack IDs instead of the intended channel name.",
+          "severity": "low",
+          "matched_candidate": "Line 82 in SlackTestMessageButton.tsx changed from nullish coalescing (??) to logical OR (||) for channel name handling, which alters behavior for empty strings - now falls back to ID instead of preserving empty string",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same underlying issue: the change from nullish coalescing (??) to logical OR (||) causes empty string channel names to fall back to the channel ID instead of being preserved. The golden comment describes the user-facing symptom (displaying ##general or raw Slack IDs), while the candidate describes the technical cause (the operator change and its behavioral impact on empty strings). They are describing the same bug from different perspectives."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "getIntegrationHealth method may return undefined for recommendedChannelId and recommendedChannelName when no channels exist in the workspace, potentially causing UI components to display empty values"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The health lookup shares the same catch block as validation, so a transient channel fetch/rate-limit failure can make a valid Slack integration appear disconnected.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "Building status now fetches all Slack channels recursively. Since the connection card polls status, large workspaces can hit Slack API limits or slow down settings pages.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Private channels are sorted before public channels, which reverses the intended public-first ordering and makes common public channels harder to find.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 1,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.5,
+      "recall": 0.25,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR35__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR35__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/36": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "updateMonthlyUsage function converts input values to numbers without validation - Number(event.target.value) can return NaN if user enters non-numeric input or leaves field empty, which could propagate through calculation system"
+        },
+        {
+          "candidate": "calculateModelPriceEstimate function's case-insensitive price lookup only checks lowercase and uppercase variants, missing mixed case variations like 'InputTokens' which won't match 'inputtokens' or 'INPUTTOKENS'"
+        },
+        {
+          "candidate": "UpsertModelFormDialog initializes monthly usage estimates with hardcoded value of 1,000,000 for all usage types, which may be too high for some types (per-character pricing) and too low for others (per-token pricing at scale)"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "A usage value of 0 is normalized to 1, so the preview charges for usage types that should contribute zero cost.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "For models with multiple pricing tiers, the estimate always uses default tier prices and ignores tier conditions, so the preview can be wrong for the same usage that would match a custom tier.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The estimate is recalculated from the current usageDetails state, not the usage submitted with the test result, so editing usage after a match can show a cost for data that was never tested.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Edit and clone defaults take usage estimate keys from the first tier instead of the actual default tier, which can hide expected usage fields when tier order changes.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 3,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR36__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR36__20260603/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "A usage value of 0 is normalized to 1, so the preview charges for usage types that should contribute zero cost.",
+          "severity": "high",
+          "matched_candidate": "calculateModelPriceEstimate() clamps usage units with Math.max(1, usageUnits), so an entered usage of 0 is treated as 1 unit, inflating the displayed monthly estimate and request-cost estimate",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same underlying issue: the code uses Math.max(1, usageUnits) which converts a usage value of 0 into 1, causing incorrect cost calculations. The golden comment focuses on the normalization causing zero-cost items to show charges, while the candidate describes it as inflating estimates. These are two perspectives on the identical bug - when usage should be 0, it's forced to 1, resulting in incorrect pricing."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "addMonthlyUsageType() derives the next key from monthlyUsageEntries.length + 1, which can reuse an existing custom_N key after deletions and overwrite the user's prior estimate value"
+        },
+        {
+          "candidate": "Monthly budget uses Number(event.target.value) for any non-empty value, which can produce NaN during editing; that NaN is then passed into formatUsdEstimate()/Decimal comparisons in PricePreview, potentially rendering invalid values or throwing"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "For models with multiple pricing tiers, the estimate always uses default tier prices and ignores tier conditions, so the preview can be wrong for the same usage that would match a custom tier.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The estimate is recalculated from the current usageDetails state, not the usage submitted with the test result, so editing usage after a match can show a cost for data that was never tested.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Edit and clone defaults take usage estimate keys from the first tier instead of the actual default tier, which can hide expected usage fields when tier order changes.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 2,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.3333333333333333,
+      "recall": 0.25,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR36__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR36__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/25": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The public excerpt field can fall back to private metadata without checking MANAGE_PAGES or private metadata permissions, which can leak private CMS content to storefront/API clients.",
+          "severity": "high",
+          "matched_candidate": "get_page_excerpt() falls back to page.private_metadata when public metadata has no excerpt, so the public Page.excerpt field can expose private metadata to non-staff users querying published pages",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same security vulnerability: the `get_page_excerpt()` function (or `Page.excerpt` field) falls back to private_metadata without proper permission checks, potentially exposing private CMS content to unauthorized users (storefront/API clients or non-staff users). The golden comment mentions the lack of MANAGE_PAGES permission check, while the candidate explicitly describes the fallback mechanism and the exposure to non-staff users. These are semantically identical issues describing the same data leak vulnerability."
+        },
+        {
+          "golden_comment": "For maxLength values below 3, the returned excerpt can be longer than the requested limit because the suffix is always appended after slicing with a negative index.",
+          "severity": "medium",
+          "matched_candidate": "_truncate_excerpt can return strings longer than max_length for small PositiveInt values (e.g., 1 or 2) because it slices with max_length - 3 and then appends '...'",
+          "confidence": 0.98,
+          "reasoning": "Both comments identify the same bug: when maxLength/max_length is a small value (specifically below 3, or examples given as 1 or 2), the function returns a string longer than the specified limit. Both explain the root cause identically: the code slices at (max_length - 3) and then appends '...' (3 characters), resulting in a string that exceeds the intended maximum length. The wording differs slightly but they describe the exact same issue with the same underlying cause."
+        },
+        {
+          "golden_comment": "Resolving pageTypeName performs a separate PageType query for every Page node, creating an N+1 query pattern on page listings instead of reusing the existing PageTypeByIdLoader.",
+          "severity": "medium",
+          "matched_candidate": "Page.resolve_page_type_name does a direct PageType.objects.get() per page node, creating an N+1 query pattern for page listings requesting pageTypeName",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same N+1 query problem in the Page.resolve_page_type_name method. The golden comment mentions it performs a separate PageType query for every Page node instead of using PageTypeByIdLoader, while the candidate specifies it does a direct PageType.objects.get() per page node. Both describe the same underlying issue: an N+1 query pattern when resolving pageTypeName on page listings. The difference in wording (mentioning the loader vs mentioning the direct query) describes the same problem from slightly different angles."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "New GraphQL fields pageTypeName and excerpt document the version as 'Added in Saleor 3.23.' rather than including the required ADDED_IN_{VERSION} substring, failing compliance requirement for version-marking newly added GraphQL fields"
+        },
+        {
+          "candidate": "test_page_excerpt_truncates_content asserts a hardcoded expected excerpt string even though the expected value is derivable from already-defined variables (text, max_length), making the test more brittle"
+        },
+        {
+          "candidate": "_extract_page_content_text only reads data.text or data.caption, ignoring common EditorJS block structures like lists (data.items), leading to empty or incomplete excerpts for many valid page contents"
+        }
+      ],
+      "false_negatives": [],
+      "errors": [],
+      "total_candidates": 6,
+      "total_golden": 3,
+      "tp": 3,
+      "fp": 3,
+      "fn": 0,
+      "errors_count": 0,
+      "precision": 0.5,
+      "recall": 1.0,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR25__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR25__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "Metadata key collision risk: excerpt extraction checks both metadata and private_metadata for the same 'excerpt' key, which could lead to unexpected behavior if both contain different values"
+        },
+        {
+          "candidate": "Undocumented metadata precedence: public metadata takes precedence over private metadata, but this behavior is not documented in the function docstring"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The public excerpt field can fall back to private metadata without checking MANAGE_PAGES or private metadata permissions, which can leak private CMS content to storefront/API clients.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "For maxLength values below 3, the returned excerpt can be longer than the requested limit because the suffix is always appended after slicing with a negative index.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Resolving pageTypeName performs a separate PageType query for every Page node, creating an N+1 query pattern on page listings instead of reusing the existing PageTypeByIdLoader.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 3,
+      "tp": 0,
+      "fp": 2,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR25__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR25__20260602/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/31": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "Memo dependency array missing priceUnitMultiplier in PriceBreakdownTooltip - the maxDecimals useMemo hook depends on priceUnitMultiplier but doesn't include it in the dependency array, causing stale calculations when priceUnitMultiplier changes"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Sample usage values have no upper bound, so a very large value can be accepted and used in Decimal calculations/rendering, which may hurt browser performance.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Unknown usage types fall back to total usage, and prices containing input/output plus total can be added together, causing estimated costs to be overstated.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "normalizedSampleUsage is recreated on every render, so this useMemo recomputes every time and does not actually memoize the estimate calculation.",
+          "severity": "low"
+        },
+        {
+          "golden_comment": "The pricing summary always estimates from the default tier, even when custom tiers exist and may match before the default tier, so tiered pricing can show a misleading sample estimate.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 1,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 1,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR31__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR31__20260603/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "normalizeSampleUsage does not guard against NaN values from PricePreview number inputs, causing estimateCostFromPrices to multiply by NaN and display '$NaN' in the UI"
+        },
+        {
+          "candidate": "estimateCostFromPrices uses substring matching to assign full input/output sample counts to cache-related keys (input_cached_tokens, input_cache_read), inflating cost estimates and double-counting tokens"
+        },
+        {
+          "candidate": "PricingSection hardcodes sample usage values in explanatory text instead of deriving them from DEFAULT_SAMPLE_USAGE, risking inconsistency if defaults change"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "Sample usage values have no upper bound, so a very large value can be accepted and used in Decimal calculations/rendering, which may hurt browser performance.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Unknown usage types fall back to total usage, and prices containing input/output plus total can be added together, causing estimated costs to be overstated.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "normalizedSampleUsage is recreated on every render, so this useMemo recomputes every time and does not actually memoize the estimate calculation.",
+          "severity": "low"
+        },
+        {
+          "golden_comment": "The pricing summary always estimates from the default tier, even when custom tiers exist and may match before the default tier, so tiered pricing can show a misleading sample estimate.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 3,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR31__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR31__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/33": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "buildCommentContextDetails returns 'unknown' string when objectId is null/undefined, but email template expects optional commentObjectReference - passing 'unknown' string may confuse recipients if displayed as 'Reference: unknown' in email"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "objectType is accepted as any string instead of the known comment object enum, so malformed notification jobs can carry invalid object context.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The worker prefers object context from the queue payload over the persisted comment, so a stale or malformed job can display context that does not match the actual comment or link.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "commentContextLabel is interpolated into the email subject without the same sanitization applied to authorName and projectName, which can allow unsafe subject content.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The template renders the full object reference into outbound email, which can expose internal trace/session/object identifiers unnecessarily.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 1,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 1,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR33__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR33__20260603/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "objectType is accepted as any string instead of the known comment object enum, so malformed notification jobs can carry invalid object context.",
+          "severity": "medium",
+          "matched_candidate": "NotificationEventSchema defines objectType/objectId/dataField as optional free-form strings, even though comment objectType and dataField are constrained as enums elsewhere, reducing validation/type-safety for queued jobs",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same core problem: the NotificationEventSchema accepts objectType as a free-form string when it should be constrained to specific enum values (from the comment object enum). The golden comment focuses specifically on objectType accepting any string instead of the known enum, while the candidate issue mentions this same problem for objectType plus also notes similar issues with dataField. Both recognize this leads to invalid/malformed data in notification jobs and reduced type safety. The candidate is more comprehensive but clearly identifies the same underlying issue."
+        },
+        {
+          "golden_comment": "commentContextLabel is interpolated into the email subject without the same sanitization applied to authorName and projectName, which can allow unsafe subject content.",
+          "severity": "high",
+          "matched_candidate": "sendCommentMentionEmail interpolates commentContextLabel into the email subject without sanitizeEmailSubject, which can allow CRLF/control characters to reach email headers if a queued payload ever contains them",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same security vulnerability: commentContextLabel is interpolated into the email subject without proper sanitization (specifically without sanitizeEmailSubject). The golden comment notes it lacks 'the same sanitization applied to authorName and projectName' while the candidate explicitly names the missing function (sanitizeEmailSubject) and explains the consequence (CRLF/control characters in headers). These are semantically identical issues - the same variable, same location, same missing sanitization, just with different levels of technical detail."
+        }
+      ],
+      "false_positives": [],
+      "false_negatives": [
+        {
+          "golden_comment": "The worker prefers object context from the queue payload over the persisted comment, so a stale or malformed job can display context that does not match the actual comment or link.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The template renders the full object reference into outbound email, which can expose internal trace/session/object identifiers unnecessarily.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 4,
+      "tp": 2,
+      "fp": 0,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR33__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR33__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/32": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Bulk updates are executed one-by-one without a transaction, so a failure halfway through can leave only part of the requested preference set updated.",
+          "severity": "medium",
+          "matched_candidate": "updateMany mutation uses sequential database operations in a for-loop instead of a transaction, risking inconsistent state if operation fails partway through",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: the updateMany mutation performs multiple database operations sequentially without wrapping them in a transaction. This means if an operation fails partway through the loop, some updates will have been applied while others won't, leaving the data in an inconsistent/partial state. The golden comment emphasizes the consequence ('failure halfway through can leave only part of the requested preference set updated') while the candidate emphasizes the technical cause ('sequential database operations in a for-loop instead of a transaction'), but they are describing the exact same problem."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "updateMany mutation doesn't handle errors for individual preference updates within the loop, making it difficult to identify which preference caused a failure"
+        },
+        {
+          "candidate": "handleBulkUpdate function doesn't validate if preferences array exceeds server-side limit of 20 items before making API call"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The project summary counts notification preferences for all users in the project instead of only the current user, so any project reader can infer other users' notification configuration counts.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "resetForProject deletes notification preferences but only requires project:read access, allowing users with read-only project access to mutate their notification settings through this endpoint.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The Enabled and Disabled tiles use the current user's preferences, but Configured uses the project-wide summary, so the dashboard mixes two different scopes in one summary row.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 4,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 2,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 0.25,
+      "recall": 0.25,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR32__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR32__20260603/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The project summary counts notification preferences for all users in the project instead of only the current user, so any project reader can infer other users' notification configuration counts.",
+          "severity": "high",
+          "matched_candidate": "getProjectSummary counts notificationPreference records for the whole project without userId filter, so configuredCount shown in the UI is incorrect for the current user and can grow with project size. The query also loads all matching rows into memory and counts in application code, which can become slow for large projects.",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same core problem: the getProjectSummary method counts notification preferences for all users in the project rather than filtering by the current user. The golden comment emphasizes the security/privacy concern (users can infer other users' notification counts), while the candidate also mentions this as 'incorrect for the current user' and adds performance concerns. Despite different emphasis, they identify the same underlying bug - missing userId filter in the notification preference count query."
+        },
+        {
+          "golden_comment": "Bulk updates are executed one-by-one without a transaction, so a failure halfway through can leave only part of the requested preference set updated.",
+          "severity": "medium",
+          "matched_candidate": "updateMany upserts preferences sequentially without a transaction, so if any upsert fails mid-loop the earlier updates remain committed while the mutation errors. This can leave the user with a partially-applied 'Enable all/Disable all' operation.",
+          "confidence": 0.98,
+          "reasoning": "Both comments identify the same core issue: sequential updates/upserts without a transaction wrapper can result in partial application of changes if a failure occurs mid-operation. The golden comment describes 'bulk updates executed one-by-one without a transaction' leading to partial updates, while the candidate describes 'updateMany upserts preferences sequentially without a transaction' causing partially-applied operations. These are semantically identical - same root cause (no transaction), same consequence (partial state on failure), just different wording."
+        }
+      ],
+      "false_positives": [],
+      "false_negatives": [
+        {
+          "golden_comment": "resetForProject deletes notification preferences but only requires project:read access, allowing users with read-only project access to mutate their notification settings through this endpoint.",
+          "severity": "high"
+        },
+        {
+          "golden_comment": "The Enabled and Disabled tiles use the current user's preferences, but Configured uses the project-wide summary, so the dashboard mixes two different scopes in one summary row.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 2,
+      "total_golden": 4,
+      "tp": 2,
+      "fp": 0,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 1.0,
+      "recall": 0.5,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR32__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR32__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/30": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Using || treats retryCount 0 as missing, so users cannot disable retries; saving zero retries silently falls back to the existing or default retry count.",
+          "severity": "medium",
+          "matched_candidate": "normalizeWebhookDeliverySettings function uses logical OR (||) for retryCount instead of nullish coalescing (??), causing 0 values to be incorrectly replaced with default value of 2",
+          "confidence": 0.95,
+          "reasoning": "Both issues identify the same bug: using the logical OR operator (||) instead of nullish coalescing (??) causes the value 0 for retryCount to be treated as falsy and replaced with a default value. The golden comment explains this prevents users from disabling retries by setting retryCount to 0, while the candidate describes the technical mechanism (0 being replaced with default value 2). These are two perspectives on the same underlying issue."
+        }
+      ],
+      "false_positives": [],
+      "false_negatives": [
+        {
+          "golden_comment": "The API schema sets a minimum timeout but no maximum, so API clients can persist very large webhook timeouts even though the UI limits the value to 120 seconds.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "Existing automations with retryCount set to 0 are loaded as the default value instead of preserving zero, so the edit form can re-enable retries unintentionally.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The parent form also uses || for retryCount, which overwrites a valid zero retry setting with 2 during form initialization.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 1,
+      "total_golden": 4,
+      "tp": 1,
+      "fp": 0,
+      "fn": 3,
+      "errors_count": 0,
+      "precision": 1.0,
+      "recall": 0.25,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR30__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR30__20260603/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "Using || treats retryCount 0 as missing, so users cannot disable retries; saving zero retries silently falls back to the existing or default retry count.",
+          "severity": "medium",
+          "matched_candidate": "retryCount is allowed to be 0, but several truthy checks (|| and if (retryCount)) treat 0 as 'unset', making it impossible to save/load no-retry behavior and causing existing retryCount=0 to reset to default 2 on update",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: the code uses truthy checks (|| operator and if(retryCount)) that treat the value 0 as falsy/unset, which prevents users from intentionally setting retryCount to 0 to disable retries. Both note that this causes 0 values to be ignored and fall back to default values. The candidate provides more technical detail about save/load behavior and the default value of 2, but describes the identical underlying bug."
+        },
+        {
+          "golden_comment": "Existing automations with retryCount set to 0 are loaded as the default value instead of preserving zero, so the edit form can re-enable retries unintentionally.",
+          "severity": "medium",
+          "matched_candidate": "getActionByIdWithSecrets reconstructs webhook config without timeoutMs/retryCount, preventing the worker from reading the saved values even if execution code is updated",
+          "confidence": 0.85,
+          "reasoning": "Both issues relate to the same underlying problem with webhook configuration handling, specifically around retryCount and timeoutMs values. The golden comment focuses on retryCount being set to 0 not being preserved (loaded as default instead), while the candidate describes the reconstruction process that causes this problem - the getActionByIdWithSecrets function not properly reconstructing these values. They describe the same bug from slightly different angles: the golden describes the symptom (zero values not preserved), while the candidate describes the mechanism (reconstruction without these fields). Both point to the same configuration preservation issue."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "Webhook timeoutMs/retryCount are saved into action config, but webhook execution still uses env.LANGFUSE_WEBHOOK_TIMEOUT_MS and a fixed backOff numOfAttempts=4, so the new UI settings do not change delivery behavior"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The API schema sets a minimum timeout but no maximum, so API clients can persist very large webhook timeouts even though the UI limits the value to 120 seconds.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The parent form also uses || for retryCount, which overwrites a valid zero retry setting with 2 during form initialization.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 2,
+      "fp": 1,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.6666666666666666,
+      "recall": 0.5,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR30__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR30__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/langfuse-clone/pull/15": {
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [],
+      "false_positives": [
+        {
+          "candidate": "SQL injection vulnerability: nameFilter uses direct string interpolation within Prisma.sql template instead of parameterized pattern construction"
+        },
+        {
+          "candidate": "Incorrect archived filter logic: condition may not correctly filter archived prompts based on label array format"
+        },
+        {
+          "candidate": "Missing null check for query result: destructuring assumes at least one row returned, will cause TypeError if query returns empty array when project has no prompts"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The default includes archived prompt versions when the caller omits includeArchived, which can make summary totals include data that normal prompt list views may hide.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The search term is used as a raw LIKE pattern, so characters such as % and _ act as wildcards and can return a much broader summary than the user intended.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "This counts every prompt version with any label instead of counting protected labels only, so the protected/labeled metric can be inflated.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The summary query only passes the text search and ignores the current folder path and active table filters, so the displayed summary can disagree with the prompt rows being shown.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 0,
+      "fp": 3,
+      "fn": 4,
+      "errors_count": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "tool": "lyxor",
+      "repo_name": "langfuse__langfuse-clone__lyxor__PR15__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__lyxor__PR15__20260603/pull/1"
+    },
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "This counts every prompt version with any label instead of counting protected labels only, so the protected/labeled metric can be inflated.",
+          "severity": "medium",
+          "matched_candidate": "The API field protectedLabelCount actually counts versions with any labels (cardinality(labels) > 0), which conflicts with the codebase's existing 'protected labels' concept and the UI label 'Labeled versions,' increasing the risk of misuse",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: the code counts versions with any labels (cardinality(labels) > 0) instead of specifically counting protected labels. The golden comment focuses on how this inflates the protected/labeled metric, while the candidate provides more context about the conflict with existing 'protected labels' concepts and UI labeling. Despite different wording and emphasis, they both point to the identical bug where the counting logic is too broad."
+        },
+        {
+          "golden_comment": "The summary query only passes the text search and ignores the current folder path and active table filters, so the displayed summary can disagree with the prompt rows being shown.",
+          "severity": "medium",
+          "matched_candidate": "PromptTable shows a summary badge for the current folder/search, but the versionSummary query only applies name and ignores the table's folder (pathPrefix) and other filters, so summary counts can disagree with the rows being shown",
+          "confidence": 0.95,
+          "reasoning": "Both comments identify the same core issue: the summary/versionSummary query does not respect all the filters that are applied to the displayed rows (specifically folder path/pathPrefix and table filters), only applying the text search/name filter. This causes a mismatch between the summary counts shown and the actual filtered rows displayed. The candidate is more specific about the component (PromptTable) and query name (versionSummary), but describes the identical underlying bug."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "versionSummary computes textPromptCount/chatPromptCount using COUNT(*) FILTER, which counts prompt versions rather than prompt names; this makes the 'Types' breakdown misleading when prompts have multiple versions"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The default includes archived prompt versions when the caller omits includeArchived, which can make summary totals include data that normal prompt list views may hide.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The search term is used as a raw LIKE pattern, so characters such as % and _ act as wildcards and can return a much broader summary than the user intended.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 3,
+      "total_golden": 4,
+      "tp": 2,
+      "fp": 1,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 0.6666666666666666,
+      "recall": 0.5,
+      "tool": "qodo",
+      "repo_name": "langfuse__langfuse-clone__qodo__PR15__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/langfuse__langfuse-clone__qodo__PR15__20260603/pull/1"
+    }
+  },
+  "https://github.com/jaykaduofficial/saleor-clone/pull/16": {
+    "qodo": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The expiresAt filter is wired to updated_at instead of expires_at, so clients filtering by expiration date will receive incorrect export files.",
+          "severity": "medium",
+          "matched_candidate": "expiresAt filter uses wrong field - filter_expires_at() incorrectly filters on ExportFile.updated_at instead of ExportFile.expires_at, returning wrong records",
+          "confidence": 1.0,
+          "reasoning": "Both comments identify the exact same bug: the expiresAt filter is incorrectly using the updated_at field instead of the expires_at field in the ExportFile model. The golden comment describes the issue from a client perspective (clients will receive incorrect files), while the candidate is more technical (specifying the function name filter_expires_at()), but they both point to the same underlying defect."
+        },
+        {
+          "golden_comment": "The model stores file_size as PositiveBigIntegerField, but GraphQL exposes it as Int. Large exports over the GraphQL 32-bit Int range can fail serialization or return unusable values.",
+          "severity": "medium",
+          "matched_candidate": "fileSize GraphQL integer overflow - ExportFile.file_size is PositiveBigIntegerField but exposed as graphene.Int, risking overflow for large file sizes",
+          "confidence": 1.0,
+          "reasoning": "Both comments identify the exact same issue: ExportFile.file_size is stored as a PositiveBigIntegerField in the model but exposed as a GraphQL Int (32-bit), which can cause overflow problems for large file sizes. The candidate uses slightly more technical terminology ('integer overflow') but describes the identical problem with the same root cause and consequence."
+        }
+      ],
+      "false_positives": [
+        {
+          "candidate": "expires_at field missing database index - ExportFile.expires_at is used in GraphQL filtering/sorting and cleanup queries but was added without db_index=True, causing potential slow queries and full table scans"
+        },
+        {
+          "candidate": "Missing ADDED_IN_{VERSION} markers - New GraphQL fields expiresAt and fileSize lack the required ADDED_IN_{VERSION} token in their descriptions (ADDED_IN_322 constant expands to plain text instead of literal token)"
+        },
+        {
+          "candidate": "Field documentation omits limits - GraphQL fields expiresAt and fileSize don't document limits, nullability semantics, units (bytes), or constraints as required"
+        },
+        {
+          "candidate": "Cleanup query duplicates rows - delete_old_export_files() mixes OR condition with events__isnull=True JOIN, potentially duplicating ExportFile rows and causing redundant storage delete calls"
+        }
+      ],
+      "false_negatives": [
+        {
+          "golden_comment": "The temporary file pointer is left at EOF after measuring size, so content_file.save may persist an empty or truncated export depending on the storage/file implementation. The file should be rewound before saving.",
+          "severity": "high"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 6,
+      "total_golden": 3,
+      "tp": 2,
+      "fp": 4,
+      "fn": 1,
+      "errors_count": 0,
+      "precision": 0.3333333333333333,
+      "recall": 0.6666666666666666,
+      "tool": "qodo",
+      "repo_name": "saleor__saleor-clone__qodo__PR16__20260603",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__qodo__PR16__20260603/pull/1"
+    },
+    "lyxor": {
+      "skipped": false,
+      "true_positives": [
+        {
+          "golden_comment": "The temporary file pointer is left at EOF after measuring size, so content_file.save may persist an empty or truncated export depending on the storage/file implementation. The file should be rewound before saving.",
+          "severity": "high",
+          "matched_candidate": "File pointer not reset to beginning after seek(0, 2) in save_csv_file_in_export_file, potentially causing empty file saves when content_file.save() is called",
+          "confidence": 0.98,
+          "reasoning": "Both comments identify the same underlying issue: after using seek(0, 2) to measure file size (moving the file pointer to EOF), the pointer is not reset to the beginning before calling content_file.save(). This causes the file to be saved empty or truncated because the pointer remains at EOF. The candidate explicitly mentions 'File pointer not reset to beginning after seek(0, 2)' and 'potentially causing empty file saves', which directly matches the golden comment's concern about the file being 'left at EOF' and needing to be 'rewound before saving'."
+        }
+      ],
+      "false_positives": [],
+      "false_negatives": [
+        {
+          "golden_comment": "The expiresAt filter is wired to updated_at instead of expires_at, so clients filtering by expiration date will receive incorrect export files.",
+          "severity": "medium"
+        },
+        {
+          "golden_comment": "The model stores file_size as PositiveBigIntegerField, but GraphQL exposes it as Int. Large exports over the GraphQL 32-bit Int range can fail serialization or return unusable values.",
+          "severity": "medium"
+        }
+      ],
+      "errors": [],
+      "total_candidates": 1,
+      "total_golden": 3,
+      "tp": 1,
+      "fp": 0,
+      "fn": 2,
+      "errors_count": 0,
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "tool": "lyxor",
+      "repo_name": "saleor__saleor-clone__lyxor__PR16__20260602",
+      "pr_url": "https://github.com/annoted-pullrequest/saleor__saleor-clone__lyxor__PR16__20260602/pull/1"
+    }
+  }
+}
