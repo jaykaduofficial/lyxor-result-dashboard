@@ -9,18 +9,18 @@
 }
 
 .severity-high {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: var(--danger-soft);
+  color: var(--danger-text);
 }
 
 .severity-medium {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
+  background: var(--warning-soft);
+  color: var(--warning-text);
 }
 
 .severity-low {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
+  background: var(--success-soft);
+  color: var(--success-text);
 }
 
 .severity-badge:not(.severity-high):not(.severity-medium):not(.severity-low) {

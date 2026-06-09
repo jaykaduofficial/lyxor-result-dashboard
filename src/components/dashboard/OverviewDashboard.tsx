@@ -64,19 +64,20 @@ export function OverviewDashboard({ stats }: OverviewDashboardProps) {
           <h3>Precision / Recall / F1</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={comparisonData} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a3647" />
-              <XAxis dataKey="tool" stroke="#8b9cb3" tick={{ fill: '#8b9cb3', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+              <XAxis dataKey="tool" stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} />
               <YAxis
-                stroke="#8b9cb3"
-                tick={{ fill: '#8b9cb3', fontSize: 12 }}
+                stroke="var(--chart-text)"
+                tick={{ fill: 'var(--chart-text)', fontSize: 12 }}
                 domain={[0, 100]}
                 tickFormatter={(v) => `${v}%`}
               />
               <Tooltip
                 contentStyle={{
-                  background: '#1c2633',
-                  border: '1px solid #2a3647',
+                  background: 'var(--chart-tooltip-bg)',
+                  border: '1px solid var(--chart-tooltip-border)',
                   borderRadius: 8,
+                  color: 'var(--text)',
                 }}
                 formatter={(value: number) => [`${value}%`, '']}
               />
@@ -92,14 +93,15 @@ export function OverviewDashboard({ stats }: OverviewDashboardProps) {
           <h3>Detection Counts (TP / FP / FN)</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={countsData} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a3647" />
-              <XAxis dataKey="tool" stroke="#8b9cb3" tick={{ fill: '#8b9cb3', fontSize: 12 }} />
-              <YAxis stroke="#8b9cb3" tick={{ fill: '#8b9cb3', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+              <XAxis dataKey="tool" stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} />
+              <YAxis stroke="var(--chart-text)" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} />
               <Tooltip
                 contentStyle={{
-                  background: '#1c2633',
-                  border: '1px solid #2a3647',
+                  background: 'var(--chart-tooltip-bg)',
+                  border: '1px solid var(--chart-tooltip-border)',
                   borderRadius: 8,
+                  color: 'var(--text)',
                 }}
               />
               <Legend />

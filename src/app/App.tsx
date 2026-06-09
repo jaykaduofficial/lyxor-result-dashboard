@@ -5,6 +5,7 @@ import { PRDetail } from '../components/pr/PRDetail'
 import { PRList } from '../components/pr/PRList'
 import { parseEvaluations } from '../lib/parseEvaluations'
 import type { EvaluationsFile } from '../types/evaluation'
+import { DownloadMenu } from '../components/ui/DownloadMenu'
 import './App.css'
 
 type Tab = 'overview' | 'per-pr'
@@ -67,6 +68,7 @@ function App() {
               Per PR Analysis
             </button>
           </nav>
+          <DownloadMenu stats={stats} rawData={data} sourceFile={fileName ?? 'evaluations.json'} />
           <button className="reset-btn" onClick={handleReset}>
             Upload new file
           </button>

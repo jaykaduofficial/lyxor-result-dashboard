@@ -95,9 +95,9 @@
   border-left: 3px solid;
 }
 
-.tp-title { border-color: var(--success); color: #86efac; }
-.fp-title { border-color: var(--warning); color: #fcd34d; }
-.fn-title { border-color: var(--danger); color: #fca5a5; }
+.tp-title { border-color: var(--success); color: var(--success-text); }
+.fp-title { border-color: var(--warning); color: var(--warning-text); }
+.fn-title { border-color: var(--danger); color: var(--danger-text); }
 .error-title { border-color: var(--danger); }
 
 .finding-card {
