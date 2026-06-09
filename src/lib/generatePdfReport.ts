@@ -1,7 +1,13 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { formatPercent } from './parseEvaluations'
+import { getFindingsByTool } from './toolFindings'
 import type { OverallStats } from '../types/evaluation'
+
+const TOOL_HEAD_COLORS: Record<string, [number, number, number]> = {
+  qodo: [124, 58, 237],
+  lyxor: [8, 145, 178],
+}
 
 function calcF1(precision: number, recall: number): number {
   return precision + recall > 0
@@ -17,14 +23,7 @@ function addSectionTitle(doc: jsPDF, title: string, y: number): number {
   return y + 6
 }
 
-function ensureSpace(doc: jsPDF, needed: number): number {
-  const pageHeight = doc.internal.pageSize.getHeight()
-  if (needed > pageHeight - 20) {
-    doc.addPage()
-    return 20
-  }
-  return needed
-}
+type AutoTableDoc = jsPDF & { lastAutoTable: { finalY: number } }
 
 export function downloadPdfReport(stats: OverallStats, sourceFile: string): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
@@ -73,9 +72,7 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
     margin: { left: 14, right: 14 },
   })
 
-  y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12
-
-  y = ensureSpace(doc, y + 40)
+  y = (doc as AutoTableDoc).lastAutoTable.finalY + 12
   y = addSectionTitle(doc, 'Per Pull Request Metrics', y)
 
   autoTable(doc, {
@@ -103,94 +100,98 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
     margin: { left: 14, right: 14 },
   })
 
-  y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12
+  const findingsByTool = getFindingsByTool(stats)
 
-  const tpRows = stats.perPR.flatMap((pr) =>
-    Object.entries(pr.tools).flatMap(([tool, eval_]) =>
-      eval_.true_positives.map((tp) => [
-        pr.repo,
-        `#${pr.prNumber}`,
-        tool,
-        tp.severity,
-        `${(tp.confidence * 100).toFixed(0)}%`,
-        tp.golden_comment,
-        tp.matched_candidate,
-      ]),
-    ),
-  )
+  for (const findings of findingsByTool) {
+    const toolColor = TOOL_HEAD_COLORS[findings.tool] ?? [37, 99, 235]
+    const toolLabel = findings.tool.charAt(0).toUpperCase() + findings.tool.slice(1)
 
-  if (tpRows.length > 0) {
     doc.addPage()
     y = 20
-    y = addSectionTitle(doc, `True Positives (${tpRows.length})`, y)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...toolColor)
+    doc.text(`${toolLabel} — Findings`, 14, y)
+    y += 12
 
-    autoTable(doc, {
-      startY: y,
-      head: [['Repo', 'PR', 'Tool', 'Severity', 'Conf.', 'Golden Comment', 'Matched Candidate']],
-      body: tpRows,
-      styles: { fontSize: 6, cellPadding: 2, overflow: 'linebreak' },
-      headStyles: { fillColor: [22, 163, 74], textColor: 255 },
-      columnStyles: {
-        5: { cellWidth: 45 },
-        6: { cellWidth: 45 },
-      },
-      margin: { left: 14, right: 14 },
-    })
-  }
+    y = addSectionTitle(doc, `True Positives (${findings.truePositives.length})`, y)
 
-  const fpRows = stats.perPR.flatMap((pr) =>
-    Object.entries(pr.tools).flatMap(([tool, eval_]) =>
-      eval_.false_positives.map((fp) => [
-        pr.repo,
-        `#${pr.prNumber}`,
-        tool,
-        fp.candidate,
-      ]),
-    ),
-  )
+    if (findings.truePositives.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Repo', 'PR', 'Severity', 'Conf.', 'Golden Comment', 'Matched Candidate']],
+        body: findings.truePositives.map((tp) => [
+          tp.repo,
+          `#${tp.prNumber}`,
+          tp.severity,
+          `${(tp.confidence * 100).toFixed(0)}%`,
+          tp.golden_comment,
+          tp.matched_candidate,
+        ]),
+        styles: { fontSize: 6, cellPadding: 2, overflow: 'linebreak' },
+        headStyles: { fillColor: [22, 163, 74], textColor: 255 },
+        columnStyles: { 4: { cellWidth: 45 }, 5: { cellWidth: 45 } },
+        margin: { left: 14, right: 14 },
+      })
+      y = (doc as AutoTableDoc).lastAutoTable.finalY + 10
+    } else {
+      doc.setFontSize(9)
+      doc.setTextColor(100, 116, 139)
+      doc.text('None', 14, y)
+      y += 10
+    }
 
-  if (fpRows.length > 0) {
-    doc.addPage()
-    y = 20
-    y = addSectionTitle(doc, `False Positives (${fpRows.length})`, y)
+    y = addSectionTitle(doc, `False Positives (${findings.falsePositives.length})`, y)
 
-    autoTable(doc, {
-      startY: y,
-      head: [['Repo', 'PR', 'Tool', 'Candidate']],
-      body: fpRows,
-      styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
-      headStyles: { fillColor: [217, 119, 6], textColor: 255 },
-      columnStyles: { 3: { cellWidth: pageWidth - 70 } },
-      margin: { left: 14, right: 14 },
-    })
-  }
+    if (findings.falsePositives.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Repo', 'PR', 'Candidate']],
+        body: findings.falsePositives.map((fp) => [
+          fp.repo,
+          `#${fp.prNumber}`,
+          fp.candidate,
+        ]),
+        styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
+        headStyles: { fillColor: [217, 119, 6], textColor: 255 },
+        columnStyles: { 2: { cellWidth: pageWidth - 50 } },
+        margin: { left: 14, right: 14 },
+      })
+      y = (doc as AutoTableDoc).lastAutoTable.finalY + 10
+    } else {
+      doc.setFontSize(9)
+      doc.setTextColor(100, 116, 139)
+      doc.text('None', 14, y)
+      y += 10
+    }
 
-  const fnRows = stats.perPR.flatMap((pr) =>
-    Object.entries(pr.tools).flatMap(([tool, eval_]) =>
-      eval_.false_negatives.map((fn) => [
-        pr.repo,
-        `#${pr.prNumber}`,
-        tool,
-        fn.severity,
-        fn.golden_comment,
-      ]),
-    ),
-  )
+    if (y > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage()
+      y = 20
+    }
 
-  if (fnRows.length > 0) {
-    doc.addPage()
-    y = 20
-    y = addSectionTitle(doc, `False Negatives (${fnRows.length})`, y)
+    y = addSectionTitle(doc, `False Negatives (${findings.falseNegatives.length})`, y)
 
-    autoTable(doc, {
-      startY: y,
-      head: [['Repo', 'PR', 'Tool', 'Severity', 'Golden Comment']],
-      body: fnRows,
-      styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
-      headStyles: { fillColor: [220, 38, 38], textColor: 255 },
-      columnStyles: { 4: { cellWidth: pageWidth - 80 } },
-      margin: { left: 14, right: 14 },
-    })
+    if (findings.falseNegatives.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Repo', 'PR', 'Severity', 'Golden Comment']],
+        body: findings.falseNegatives.map((fn) => [
+          fn.repo,
+          `#${fn.prNumber}`,
+          fn.severity,
+          fn.golden_comment,
+        ]),
+        styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
+        headStyles: { fillColor: [220, 38, 38], textColor: 255 },
+        columnStyles: { 3: { cellWidth: pageWidth - 60 } },
+        margin: { left: 14, right: 14 },
+      })
+    } else {
+      doc.setFontSize(9)
+      doc.setTextColor(100, 116, 139)
+      doc.text('None', 14, y)
+    }
   }
 
   const pageCount = doc.getNumberOfPages()

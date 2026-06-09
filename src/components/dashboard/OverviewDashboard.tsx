@@ -11,6 +11,7 @@ import {
 import { formatNumber, formatPercent } from '../../lib/parseEvaluations'
 import type { OverallStats } from '../../types/evaluation'
 import { StatCard } from '../ui/StatCard'
+import { ToolFindings } from './ToolFindings'
 import './OverviewDashboard.css'
 
 const TOOL_COLORS: Record<string, string> = {
@@ -160,6 +161,8 @@ export function OverviewDashboard({ stats }: OverviewDashboardProps) {
           </table>
         </div>
       </section>
+
+      <ToolFindings stats={stats} />
     </div>
   )
 }
