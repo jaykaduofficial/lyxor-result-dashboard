@@ -4,9 +4,25 @@ import { formatPercent } from './parseEvaluations'
 import { getFindingsByTool } from './toolFindings'
 import type { OverallStats } from '../types/evaluation'
 
+const MARGIN = 14
+
 const TOOL_HEAD_COLORS: Record<string, [number, number, number]> = {
   qodo: [124, 58, 237],
   lyxor: [8, 145, 178],
+}
+
+const COL = {
+  repo: { cellWidth: 40, overflow: 'linebreak' as const, valign: 'top' as const },
+  pr: { cellWidth: 18, halign: 'center' as const, overflow: 'ellipsize' as const },
+  severity: { cellWidth: 22, halign: 'center' as const, overflow: 'ellipsize' as const },
+  conf: { cellWidth: 16, halign: 'center' as const, overflow: 'ellipsize' as const },
+  tool: { cellWidth: 16, halign: 'center' as const, overflow: 'ellipsize' as const },
+  count: { cellWidth: 10, halign: 'center' as const, overflow: 'ellipsize' as const },
+  pct: { cellWidth: 16, halign: 'center' as const, overflow: 'ellipsize' as const },
+}
+
+function formatPR(prNumber: string): string {
+  return `PR ${prNumber}`
 }
 
 function calcF1(precision: number, recall: number): number {
@@ -21,6 +37,11 @@ function addSectionTitle(doc: jsPDF, title: string, y: number): number {
   doc.setTextColor(15, 23, 42)
   doc.text(title, 14, y)
   return y + 6
+}
+
+function textColWidth(pageWidth: number, fixedTotal: number, columns = 1): number {
+  const available = pageWidth - MARGIN * 2 - fixedTotal
+  return Math.max(available / columns, 30)
 }
 
 type AutoTableDoc = jsPDF & { lastAutoTable: { finalY: number } }
@@ -66,10 +87,22 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
       formatPercent(t.avgPrecision),
       formatPercent(t.avgRecall),
     ]),
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+    styles: { fontSize: 8, cellPadding: 2.5, overflow: 'ellipsize' },
+    headStyles: { fillColor: [37, 99, 235], textColor: 255, halign: 'center' },
+    columnStyles: {
+      0: { cellWidth: 18, halign: 'left' },
+      1: COL.count,
+      2: COL.count,
+      3: COL.count,
+      4: COL.count,
+      5: COL.pct,
+      6: COL.pct,
+      7: COL.pct,
+      8: COL.pct,
+      9: COL.pct,
+    },
     alternateRowStyles: { fillColor: [248, 250, 252] },
-    margin: { left: 14, right: 14 },
+    margin: { left: MARGIN, right: MARGIN },
   })
 
   y = (doc as AutoTableDoc).lastAutoTable.finalY + 12
@@ -84,7 +117,7 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
     body: stats.perPR.flatMap((pr) =>
       Object.entries(pr.tools).map(([tool, eval_]) => [
         pr.repo,
-        `#${pr.prNumber}`,
+        formatPR(pr.prNumber),
         tool,
         eval_.tp,
         eval_.fp,
@@ -94,13 +127,27 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
         formatPercent(calcF1(eval_.precision, eval_.recall)),
       ]),
     ),
-    styles: { fontSize: 7, cellPadding: 2 },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+    styles: { fontSize: 7, cellPadding: 2.5, overflow: 'ellipsize', valign: 'middle' },
+    headStyles: { fillColor: [37, 99, 235], textColor: 255, halign: 'center' },
+    columnStyles: {
+      0: COL.repo,
+      1: COL.pr,
+      2: COL.tool,
+      3: COL.count,
+      4: COL.count,
+      5: COL.count,
+      6: COL.pct,
+      7: COL.pct,
+      8: COL.pct,
+    },
     alternateRowStyles: { fillColor: [248, 250, 252] },
-    margin: { left: 14, right: 14 },
+    margin: { left: MARGIN, right: MARGIN },
   })
 
   const findingsByTool = getFindingsByTool(stats)
+  const tpTextWidth = textColWidth(pageWidth, COL.repo.cellWidth + COL.pr.cellWidth + COL.severity.cellWidth + COL.conf.cellWidth, 2)
+  const fpTextWidth = textColWidth(pageWidth, COL.repo.cellWidth + COL.pr.cellWidth, 1)
+  const fnTextWidth = textColWidth(pageWidth, COL.repo.cellWidth + COL.pr.cellWidth + COL.severity.cellWidth, 1)
 
   for (const findings of findingsByTool) {
     const toolColor = TOOL_HEAD_COLORS[findings.tool] ?? [37, 99, 235]
@@ -119,19 +166,26 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
     if (findings.truePositives.length > 0) {
       autoTable(doc, {
         startY: y,
-        head: [['Repo', 'PR', 'Severity', 'Conf.', 'Golden Comment', 'Matched Candidate']],
+        head: [['Repository', 'PR', 'Severity', 'Conf.', 'Golden Comment', 'Matched Candidate']],
         body: findings.truePositives.map((tp) => [
           tp.repo,
-          `#${tp.prNumber}`,
+          formatPR(tp.prNumber),
           tp.severity,
           `${(tp.confidence * 100).toFixed(0)}%`,
           tp.golden_comment,
           tp.matched_candidate,
         ]),
-        styles: { fontSize: 6, cellPadding: 2, overflow: 'linebreak' },
-        headStyles: { fillColor: [22, 163, 74], textColor: 255 },
-        columnStyles: { 4: { cellWidth: 45 }, 5: { cellWidth: 45 } },
-        margin: { left: 14, right: 14 },
+        styles: { fontSize: 7, cellPadding: 2.5, valign: 'top' },
+        headStyles: { fillColor: [22, 163, 74], textColor: 255, halign: 'center' },
+        columnStyles: {
+          0: COL.repo,
+          1: COL.pr,
+          2: COL.severity,
+          3: COL.conf,
+          4: { cellWidth: tpTextWidth, overflow: 'linebreak' },
+          5: { cellWidth: tpTextWidth, overflow: 'linebreak' },
+        },
+        margin: { left: MARGIN, right: MARGIN },
       })
       y = (doc as AutoTableDoc).lastAutoTable.finalY + 10
     } else {
@@ -146,16 +200,20 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
     if (findings.falsePositives.length > 0) {
       autoTable(doc, {
         startY: y,
-        head: [['Repo', 'PR', 'Candidate']],
+        head: [['Repository', 'PR', 'Candidate']],
         body: findings.falsePositives.map((fp) => [
           fp.repo,
-          `#${fp.prNumber}`,
+          formatPR(fp.prNumber),
           fp.candidate,
         ]),
-        styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
-        headStyles: { fillColor: [217, 119, 6], textColor: 255 },
-        columnStyles: { 2: { cellWidth: pageWidth - 50 } },
-        margin: { left: 14, right: 14 },
+        styles: { fontSize: 7, cellPadding: 2.5, valign: 'top' },
+        headStyles: { fillColor: [217, 119, 6], textColor: 255, halign: 'center' },
+        columnStyles: {
+          0: COL.repo,
+          1: COL.pr,
+          2: { cellWidth: fpTextWidth, overflow: 'linebreak' },
+        },
+        margin: { left: MARGIN, right: MARGIN },
       })
       y = (doc as AutoTableDoc).lastAutoTable.finalY + 10
     } else {
@@ -175,17 +233,22 @@ export function downloadPdfReport(stats: OverallStats, sourceFile: string): void
     if (findings.falseNegatives.length > 0) {
       autoTable(doc, {
         startY: y,
-        head: [['Repo', 'PR', 'Severity', 'Golden Comment']],
+        head: [['Repository', 'PR', 'Severity', 'Golden Comment']],
         body: findings.falseNegatives.map((fn) => [
           fn.repo,
-          `#${fn.prNumber}`,
+          formatPR(fn.prNumber),
           fn.severity,
           fn.golden_comment,
         ]),
-        styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
-        headStyles: { fillColor: [220, 38, 38], textColor: 255 },
-        columnStyles: { 3: { cellWidth: pageWidth - 60 } },
-        margin: { left: 14, right: 14 },
+        styles: { fontSize: 7, cellPadding: 2.5, valign: 'top' },
+        headStyles: { fillColor: [220, 38, 38], textColor: 255, halign: 'center' },
+        columnStyles: {
+          0: COL.repo,
+          1: COL.pr,
+          2: COL.severity,
+          3: { cellWidth: fnTextWidth, overflow: 'linebreak' },
+        },
+        margin: { left: MARGIN, right: MARGIN },
       })
     } else {
       doc.setFontSize(9)
