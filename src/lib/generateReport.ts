@@ -1,56 +1,34 @@
 import { formatPercent } from './parseEvaluations'
-import type { EvaluationsFile, OverallStats } from '../types/evaluation'
+import type { OverallStats } from '../types/evaluation'
 
-export interface BenchmarkReport {
-  generatedAt: string
-  sourceFile: string
-  summary: {
-    totalPRs: number
-    tools: OverallStats['tools']
-  }
-  perPullRequest: OverallStats['perPR']
-  rawData: EvaluationsFile
-}
-
-export function buildReport(
-  stats: OverallStats,
-  rawData: EvaluationsFile,
-  sourceFile: string,
-): BenchmarkReport {
-  return {
-    generatedAt: new Date().toISOString(),
-    sourceFile,
-    summary: {
-      totalPRs: stats.totalPRs,
-      tools: stats.tools,
-    },
-    perPullRequest: stats.perPR,
-    rawData,
-  }
-}
-
-function escapeCsv(value: string | number): string {
+function escapeCsv(value: string | number | boolean): string {
   const str = String(value)
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`
-  }
-  return str
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/"/g, '""')
+  return `"${str}"`
 }
 
-function csvRow(values: (string | number)[]): string {
+function csvRow(values: (string | number | boolean)[]): string {
   return values.map(escapeCsv).join(',')
+}
+
+function calcF1(precision: number, recall: number): number {
+  return precision + recall > 0
+    ? (2 * precision * recall) / (precision + recall)
+    : 0
 }
 
 export function buildReportCsv(stats: OverallStats, sourceFile: string): string {
   const lines: string[] = []
 
-  lines.push('CODE REVIEW BENCHMARK REPORT')
-  lines.push(`Generated At,${new Date().toISOString()}`)
-  lines.push(`Source File,${sourceFile}`)
-  lines.push(`Total Pull Requests,${stats.totalPRs}`)
-  lines.push('')
+  lines.push(csvRow(['Report Title', 'Code Review Benchmark Report']))
+  lines.push(csvRow(['Generated At', new Date().toISOString()]))
+  lines.push(csvRow(['Source File', sourceFile]))
+  lines.push(csvRow(['Total Pull Requests', stats.totalPRs]))
+  lines.push(csvRow([]))
 
-  lines.push('TOOL SUMMARY')
+  lines.push(csvRow(['Section', 'Tool Summary']))
   lines.push(
     csvRow([
       'Tool',
@@ -87,9 +65,9 @@ export function buildReportCsv(stats: OverallStats, sourceFile: string): string 
       ]),
     )
   }
-  lines.push('')
+  lines.push(csvRow([]))
 
-  lines.push('PER PR METRICS')
+  lines.push(csvRow(['Section', 'Per PR Metrics']))
   lines.push(
     csvRow([
       'Repository',
@@ -110,10 +88,6 @@ export function buildReportCsv(stats: OverallStats, sourceFile: string): string 
   )
   for (const pr of stats.perPR) {
     for (const [tool, eval_] of Object.entries(pr.tools)) {
-      const f1 =
-        eval_.precision + eval_.recall > 0
-          ? (2 * eval_.precision * eval_.recall) / (eval_.precision + eval_.recall)
-          : 0
       lines.push(
         csvRow([
           pr.repo,
@@ -126,7 +100,7 @@ export function buildReportCsv(stats: OverallStats, sourceFile: string): string 
           eval_.fn,
           formatPercent(eval_.precision),
           formatPercent(eval_.recall),
-          formatPercent(f1),
+          formatPercent(calcF1(eval_.precision, eval_.recall)),
           eval_.total_candidates,
           eval_.total_golden,
           eval_.errors_count,
@@ -134,9 +108,9 @@ export function buildReportCsv(stats: OverallStats, sourceFile: string): string 
       )
     }
   }
-  lines.push('')
+  lines.push(csvRow([]))
 
-  lines.push('TRUE POSITIVES')
+  lines.push(csvRow(['Section', 'True Positives']))
   lines.push(
     csvRow([
       'Repository',
@@ -167,9 +141,9 @@ export function buildReportCsv(stats: OverallStats, sourceFile: string): string 
       }
     }
   }
-  lines.push('')
+  lines.push(csvRow([]))
 
-  lines.push('FALSE POSITIVES')
+  lines.push(csvRow(['Section', 'False Positives']))
   lines.push(csvRow(['Repository', 'PR Number', 'Tool', 'Candidate']))
   for (const pr of stats.perPR) {
     for (const [tool, eval_] of Object.entries(pr.tools)) {
@@ -178,9 +152,9 @@ export function buildReportCsv(stats: OverallStats, sourceFile: string): string 
       }
     }
   }
-  lines.push('')
+  lines.push(csvRow([]))
 
-  lines.push('FALSE NEGATIVES')
+  lines.push(csvRow(['Section', 'False Negatives']))
   lines.push(csvRow(['Repository', 'PR Number', 'Tool', 'Severity', 'Golden Comment']))
   for (const pr of stats.perPR) {
     for (const [tool, eval_] of Object.entries(pr.tools)) {
@@ -192,42 +166,23 @@ export function buildReportCsv(stats: OverallStats, sourceFile: string): string 
     }
   }
 
-  return lines.join('\n')
+  return lines.join('\r\n')
 }
 
-export function downloadFile(
-  content: string,
-  filename: string,
-  mimeType: string,
-): void {
-  const blob = new Blob([content], { type: mimeType })
+function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = filename
+  document.body.appendChild(link)
   link.click()
+  document.body.removeChild(link)
   URL.revokeObjectURL(url)
-}
-
-export function downloadJsonReport(
-  stats: OverallStats,
-  rawData: EvaluationsFile,
-  sourceFile: string,
-): void {
-  const report = buildReport(stats, rawData, sourceFile)
-  const baseName = sourceFile.replace(/\.json$/i, '') || 'benchmark-report'
-  downloadFile(
-    JSON.stringify(report, null, 2),
-    `${baseName}-report.json`,
-    'application/json',
-  )
 }
 
 export function downloadCsvReport(stats: OverallStats, sourceFile: string): void {
   const baseName = sourceFile.replace(/\.json$/i, '') || 'benchmark-report'
-  downloadFile(
-    buildReportCsv(stats, sourceFile),
-    `${baseName}-report.csv`,
-    'text/csv;charset=utf-8',
-  )
+  const csvContent = '\uFEFF' + buildReportCsv(stats, sourceFile)
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
+  downloadBlob(blob, `${baseName}-report.csv`)
 }

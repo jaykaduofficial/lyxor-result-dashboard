@@ -68,7 +68,7 @@ function App() {
               Per PR Analysis
             </button>
           </nav>
-          <DownloadMenu stats={stats} rawData={data} sourceFile={fileName ?? 'evaluations.json'} />
+          <DownloadMenu stats={stats} sourceFile={fileName ?? 'evaluations.json'} />
           <button className="reset-btn" onClick={handleReset}>
             Upload new file
           </button>
